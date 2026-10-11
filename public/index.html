@@ -14,22 +14,35 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-mono-code { font-family: 'JetBrains Mono', monospace; }
-    .spatial-canvas {
-      background: radial-gradient(circle at 10% 10%, rgba(243, 244, 246, 0.9) 0%, rgba(255, 255, 255, 1) 45%, rgba(238, 242, 255, 0.8) 100%);
+    
+    .saas-bg {
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.45) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(238, 242, 255, 0.5) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.6) 0px, transparent 50%);
     }
-    .spatial-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(226, 232, 240, 0.85);
-      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    .saas-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .spatial-card:hover {
-      box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.09), 0 6px 14px -2px rgba(15, 23, 42, 0.04);
-      transform: translateY(-2px);
+    .saas-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
     }
+
+    .nav-item-active {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+      font-weight: 700;
+    }
+
     .radar-sweep {
-      background: conic-gradient(from 0deg, transparent 0deg, rgba(37, 99, 235, 0.25) 300deg, rgba(37, 99, 235, 0.85) 360deg);
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(37, 99, 235, 0.2) 280deg, rgba(37, 99, 235, 0.8) 360deg);
       animation: spin 1.8s linear infinite;
     }
     @keyframes spin {
@@ -37,190 +50,394 @@
       to { transform: rotate(360deg); }
     }
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .card-appear { animation: slideUp 0.3s ease-out forwards; }
+    .card-appear { animation: slideUp 0.25s ease-out forwards; }
   </style>
 </head>
-<body class="spatial-canvas min-h-screen text-slate-800 antialiased">
+<body class="saas-bg min-h-screen text-slate-900 antialiased flex flex-col md:flex-row">
 
-  <!-- License Gate Modal -->
+  <!-- ========================================== -->
+  <!-- 1. LEFT SIDEBAR (SaaS Shell Navigation)    -->
+  <!-- ========================================== -->
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200/90 flex flex-col justify-between shrink-0 z-30">
+    <div>
+      <!-- Brand Logo Header -->
+      <div class="h-16 px-6 flex items-center justify-between border-b border-slate-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white shadow-sm text-sm">
+            i5
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-extrabold text-slate-900 text-base tracking-tight">Data i5</span>
+              <span class="px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 rounded border border-blue-200">v3.5</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-semibold leading-tight">Autonomous Lead Hunter</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-1 text-xs font-semibold">
+        <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent nav-item-active transition">
+          <span class="text-base">📊</span>
+          <span>Dashboard</span>
+          <span class="ml-auto text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md">Active</span>
+        </a>
+        <a href="#hunt-form-v2" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+          <span class="text-base">🔍</span>
+          <span>Hunter Console</span>
+        </a>
+        <a href="#results-toolbar" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+          <span class="text-base">👥</span>
+          <span>Verified Contacts</span>
+          <span id="nav-count-badge" class="ml-auto text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">0</span>
+        </a>
+        <a href="#" id="nav-open-csv-modal" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+          <span class="text-base">📥</span>
+          <span>Export Leads</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+          <span class="text-base">📈</span>
+          <span>Intelligence Insights</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl border border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">
+          <span class="text-base">⚙️</span>
+          <span>Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom License / User Status -->
+    <div class="p-4 border-t border-slate-100 space-y-3">
+      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex items-center space-x-3">
+        <div class="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+          VA
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-bold text-slate-800 truncate">Voltara Agency</p>
+          <div class="flex items-center space-x-1.5 text-[10px] text-emerald-600 font-bold">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Commercial Pro</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-400 text-center font-medium">Data i5 Engine • 2026 Edition</p>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- 2. MAIN APP CONTAINER                      -->
+  <!-- ========================================== -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top Application Bar -->
+    <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center space-x-3">
+        <span class="text-sm font-extrabold text-slate-900">Project Alpha</span>
+        <span class="text-slate-300">/</span>
+        <span class="text-xs font-semibold text-slate-500">Autonomous B2B Scraper</span>
+        <span class="hidden lg:inline-flex items-center space-x-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold border border-emerald-200">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+          <span>Engine Online</span>
+        </span>
+      </div>
+
+      <!-- Quick Metrics & Global Controls -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="hidden xl:flex items-center space-x-4 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 font-semibold">
+          <span>Global Leads: <strong class="text-slate-900 font-black">1,429,800+</strong></span>
+          <span class="text-slate-300">•</span>
+          <span>Searches Active: <strong class="text-blue-600 font-black">Real-Time</strong></span>
+        </div>
+
+        <button id="btn-copy-all-emails" class="hidden sm:inline-flex px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition items-center space-x-1.5 border border-slate-200">
+          <span>📋 Copy Emails</span>
+        </button>
+
+        <button id="btn-download-csv" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl shadow-sm shadow-blue-500/20 transition flex items-center space-x-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          <span>Export CSV</span>
+        </button>
+
+        <div class="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-black text-slate-700">
+          ⚙️
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Content -->
+    <main class="p-6 md:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+      <!-- ========================================== -->
+      <!-- A. SEARCH CONSOLE (Floating Modern Dialog) -->
+      <!-- ========================================== -->
+      <section class="saas-card p-6 md:p-7 rounded-3xl relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div>
+            <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-[10px] font-black uppercase tracking-wider mb-1.5 border border-blue-200">
+              <span>Universal Intelligence Console</span>
+            </div>
+            <h1 class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Autonomous B2B Client & Lead Hunter</h1>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Input any target niche and city worldwide. The agent launches real-time web crawlers and physical maps sensors to capture verified contacts.
+            </p>
+          </div>
+          
+          <div class="flex items-center space-x-2 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-start lg:self-center">
+            <span>⚡ Multi-Source: OpenStreetMap + Official Web Crawlers</span>
+          </div>
+        </div>
+
+        <!-- Quick Category Presets -->
+        <div class="flex flex-wrap items-center gap-2 mb-5 text-xs">
+          <span class="text-slate-400 font-bold mr-1">Quick Presets:</span>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Digital Marketing Agencies" data-loc="Jaipur">💻 Digital Marketing (Jaipur)</button>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Plumbers" data-loc="Miami">🔧 Plumbers (Miami)</button>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Hospitals" data-loc="Kanpur">🏥 Hospitals (Kanpur)</button>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Cafes" data-loc="Dubai">☕ Cafes (Dubai)</button>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Dentists" data-loc="London">🦷 Dentists (London)</button>
+          <button type="button" class="niche-preset-chip px-3 py-1 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg text-slate-700 border border-slate-200 transition font-bold" data-niche="Real Estate" data-loc="Mumbai">🏠 Real Estate (Mumbai)</button>
+        </div>
+
+        <!-- Clean 2-Field Search Form -->
+        <form id="hunt-form-v2" autocomplete="off" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+            
+            <div class="md:col-span-6">
+              <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Target Niche / Industry</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">🎯</span>
+                <input type="text" id="input-niche" required autocomplete="off" value="" placeholder="e.g. Digital Marketing, Plumbers, Hospitals, Gyms, Salons, Dentists" class="w-full pl-9 pr-4 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+              </div>
+            </div>
+
+            <div class="md:col-span-6">
+              <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Target Location / City</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-sm">📍</span>
+                <input type="text" id="input-location" required autocomplete="off" value="" placeholder="e.g. Jaipur, Miami, Kanpur, Dubai, Delhi, London, New York" class="w-full pl-9 pr-4 py-3 bg-slate-50/80 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+              </div>
+            </div>
+
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-xs text-slate-400 font-medium">⚡ Average scan speed: ~3.8 seconds • Instant extraction</span>
+            <button type="submit" id="btn-hunt" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-blue-500/20 transition flex items-center space-x-2">
+              <span id="btn-hunt-label">🚀 Launch Autonomous Agent</span>
+              <span id="hunt-spinner" class="hidden animate-spin">🌀</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- B. TELEMETRY SCANNER LOG                   -->
+      <!-- ========================================== -->
+      <section id="scanner-section" class="hidden saas-card p-5 rounded-2xl border border-blue-200 bg-blue-50/30 space-y-3">
+        <div class="flex items-center justify-between border-b border-blue-100 pb-2.5">
+          <div class="flex items-center space-x-3">
+            <div class="relative h-8 w-8 rounded-full border-2 border-blue-400 overflow-hidden flex items-center justify-center">
+              <div class="absolute inset-0 radar-sweep"></div>
+              <div class="h-2 w-2 bg-blue-600 rounded-full z-10"></div>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-blue-950 text-xs tracking-tight" id="scanner-status">Agent Scanning Web & Official Maps Nodes...</h3>
+              <p class="text-[10px] text-blue-600 font-semibold" id="scanner-timer">Autonomous Extraction Active</p>
+            </div>
+          </div>
+          <span id="scanner-speed-badge" class="px-2.5 py-1 text-xs font-bold bg-blue-600 text-white rounded-lg font-mono-code">Scanning...</span>
+        </div>
+        <div id="telemetry-log" class="font-mono-code text-xs text-slate-600 space-y-1 max-h-24 overflow-y-auto pr-1"></div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- C. RESULTS TOOLBAR WITH VIEW SWITCHER      -->
+      <!-- ========================================== -->
+      <section id="results-toolbar" class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+        <div class="flex items-center space-x-3">
+          <h2 class="text-base font-black text-slate-900 tracking-tight">Verified Business Leads</h2>
+          <span id="results-count-badge" class="px-2.5 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full">0 Captured</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Filter Pills -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <button class="filter-pill px-3 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 font-bold" data-filter="all">All Verified</button>
+            <button class="filter-pill px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50" data-filter="has-phone">📞 Phone</button>
+            <button class="filter-pill px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50" data-filter="has-web">🌐 Website</button>
+          </div>
+
+          <!-- View Switcher (Cards vs Table) -->
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold">
+            <button id="view-mode-cards" class="px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs">🗂️ Cards</button>
+            <button id="view-mode-table" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900">📊 Table</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- D. RESULTS GRID (Cards View)               -->
+      <!-- ========================================== -->
+      <section id="leads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      </section>
+
+      <!-- ========================================== -->
+      <!-- E. RESULTS SPREADSHEET (Table View)        -->
+      <!-- ========================================== -->
+      <section id="leads-table-container" class="hidden saas-card rounded-2xl overflow-hidden border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">#</th>
+                <th class="py-3 px-4">Business Name</th>
+                <th class="py-3 px-4">Phone / WhatsApp</th>
+                <th class="py-3 px-4">Email</th>
+                <th class="py-3 px-4">Website</th>
+                <th class="py-3 px-4">Address</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leads-table-body" class="divide-y divide-slate-100 font-medium text-slate-700">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Load More Container -->
+      <div id="load-more-container" class="hidden text-center pt-2 pb-6">
+        <button id="btn-load-more" class="px-7 py-3 bg-white hover:bg-slate-50 text-blue-600 font-extrabold text-xs rounded-xl border border-blue-300 shadow-sm transition inline-flex items-center space-x-2">
+          <span id="load-more-text">📥 Load More Businesses (+15)</span>
+          <span id="load-more-spinner" class="hidden animate-spin">🌀</span>
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="saas-card p-12 text-center rounded-3xl space-y-3">
+        <div class="h-14 w-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center text-2xl shadow-xs border border-blue-100">
+          ⚡
+        </div>
+        <h3 class="text-base font-black text-slate-900">Data i5 Lead Hunter Ready</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          Enter any target Niche and City above, then click <strong>Launch Autonomous Agent</strong> to extract live verified business intelligence with WhatsApp, phone, email, and Google Maps profiles.
+        </p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. MODALS (Export CSV & WhatsApp Outreach) -->
+  <!-- ========================================== -->
+
+  <!-- Modal A: Export B2B Leads to CSV Preview (Image 1 Style) -->
+  <div id="csv-preview-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-4xl w-full rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-black text-slate-900">Export B2B Leads to CSV</h3>
+          <p class="text-xs text-slate-500" id="csv-modal-subtitle">Exporting captured leads from Data i5 intelligence engine</p>
+        </div>
+        <button id="btn-close-csv-modal" class="text-slate-400 hover:text-slate-600 text-lg font-bold p-1">✕</button>
+      </div>
+      <div class="p-6 overflow-y-auto flex-1">
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                <th class="py-2.5 px-3">Business Name</th>
+                <th class="py-2.5 px-3">Phone Number</th>
+                <th class="py-2.5 px-3">WhatsApp Link</th>
+                <th class="py-2.5 px-3">Email Address</th>
+                <th class="py-2.5 px-3">Website</th>
+              </tr>
+            </thead>
+            <tbody id="csv-preview-table-body" class="divide-y divide-slate-100 font-mono-code text-[11px] text-slate-700">
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-500 font-bold" id="csv-modal-count">File Format: CSV</span>
+        <div class="flex items-center space-x-2">
+          <button id="btn-cancel-csv" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg border border-slate-300">Cancel</button>
+          <button id="btn-confirm-download-csv" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-lg shadow-sm">Download CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal B: WhatsApp Direct Pitch Modal (Image 3 Style) -->
+  <div id="whatsapp-pitch-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-emerald-600 text-lg">💬</span>
+          <h3 class="text-base font-black text-slate-900">Send WhatsApp Outreach Pitch</h3>
+        </div>
+        <button id="btn-close-whatsapp-modal" class="text-slate-400 hover:text-slate-600 text-lg font-bold p-1">✕</button>
+      </div>
+      <div class="p-6 space-y-4 text-xs">
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center space-x-3">
+          <div class="h-9 w-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">
+            📱
+          </div>
+          <div>
+            <p class="font-extrabold text-emerald-950" id="wa-modal-lead-name">Business Profile</p>
+            <p class="text-[11px] text-emerald-700 font-mono-code font-bold" id="wa-modal-phone">Phone Number</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Pre-filled Client Pitch Template:</label>
+          <textarea id="wa-pitch-text" rows="5" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-sans text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"></textarea>
+        </div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-2">
+        <button id="btn-cancel-whatsapp" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg border border-slate-300">Cancel</button>
+        <button id="btn-launch-whatsapp" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-lg shadow-sm flex items-center space-x-1.5">
+          <span>Launch WhatsApp Web</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- License Gate Overlay -->
   <div id="license-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="spatial-card max-w-md w-full p-8 rounded-3xl border border-slate-200 text-center space-y-6 bg-white shadow-2xl">
-      <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-sm border border-blue-100">
+    <div class="saas-card max-w-md w-full p-8 rounded-3xl border border-slate-200 text-center space-y-6 bg-white shadow-2xl">
+      <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-xs border border-blue-100">
         🛡️
       </div>
       <div>
-        <div class="inline-flex items-center space-x-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-black tracking-wider uppercase mb-2 border border-blue-200">
+        <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black tracking-wider uppercase mb-2 border border-blue-200">
           <span>Data i5 Enterprise</span>
         </div>
-        <h2 class="text-2xl font-black text-slate-900 tracking-tight">License Activation Required</h2>
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">License Activation</h2>
         <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-          Please enter your purchased license key to activate the Data i5 universal client hunter agent.
+          Please enter your purchased license key to unlock the Data i5 universal client hunter agent.
         </p>
       </div>
 
       <div class="space-y-3">
-        <input type="text" id="license-input" autocomplete="off" placeholder="Enter License Key (e.g. DATA-I5-PRO-2026)" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-center text-sm font-mono-code font-bold tracking-wider text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+        <input type="text" id="license-input" autocomplete="off" placeholder="Enter License Key (e.g. DATA-I5-PRO-2026)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs font-mono-code font-bold tracking-wider text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
         <p id="license-error-msg" class="hidden text-xs text-red-600 font-bold bg-red-50 p-2.5 rounded-xl border border-red-200"></p>
-        <button id="btn-unlock" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2">
+        <button id="btn-unlock" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 transition duration-200 flex items-center justify-center space-x-2">
           <span>Verify License & Unlock Engine</span>
           <span class="text-sm">→</span>
         </button>
       </div>
 
-      <div class="pt-2 text-[11px] text-slate-400">
-        <span>Protected by Cryptographic Checksum Check • 24/7 Global Access</span>
+      <div class="pt-2 text-[10px] text-slate-400 font-medium">
+        <span>Protected by Cryptographic Checksum • 24/7 Global Access</span>
       </div>
     </div>
   </div>
 
-  <!-- Top Navigation -->
-  <header class="border-b border-slate-200/80 sticky top-0 bg-white/90 backdrop-blur-md z-40">
-    <div class="max-w-7xl mx-auto px-6 h-18 py-3.5 flex items-center justify-between">
-      <div class="flex items-center space-x-3.5">
-        <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/25 text-xl">
-          📡
-        </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-black text-slate-900 text-lg tracking-tight">Data i5</span>
-            <span class="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 rounded-full border border-blue-200">Global Agent</span>
-          </div>
-          <p class="text-[11px] text-slate-400 font-semibold">Autonomous Web & Maps Client Scraper</p>
-        </div>
-      </div>
-
-      <div class="flex items-center space-x-3">
-        <button id="btn-copy-all-emails" class="hidden sm:flex px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition items-center space-x-1.5 border border-slate-200">
-          <span>📋 Copy All Emails</span>
-        </button>
-        <button id="btn-download-csv" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black rounded-xl shadow-sm transition flex items-center space-x-2">
-          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-          <span>Export CSV</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Workspace -->
-  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
-    
-    <!-- Clean Search Console: Pure & Simple (Niche + Location) -->
-    <section class="spatial-card p-6 sm:p-8 rounded-3xl">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Autonomous Client Hunter Agent</h1>
-          <p class="text-xs text-slate-500 mt-1">
-            Enter any industry and any city worldwide. The agent scrapes live maps and directories to extract genuine clients with phone numbers, websites & addresses.
-          </p>
-        </div>
-        <div class="flex items-center space-x-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-          <span>⚡ Real-Time Universal Hunter</span>
-        </div>
-      </div>
-
-      <!-- Quick Category Chips -->
-      <div class="flex flex-wrap items-center gap-2 mb-6 text-xs">
-        <span class="text-slate-400 font-bold mr-1">Quick Fill:</span>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Digital Marketing Agencies" data-loc="Jaipur">💻 Digital Marketing (Jaipur)</button>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Plumbers" data-loc="Miami">🔧 Plumbers (Miami)</button>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Hospitals" data-loc="Kanpur">🏥 Hospitals (Kanpur)</button>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Cafes" data-loc="Dubai">☕ Cafes (Dubai)</button>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Real Estate" data-loc="Mumbai">🏠 Real Estate (Mumbai)</button>
-        <button type="button" class="niche-preset-chip px-3 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-xl text-slate-700 border border-slate-200 transition font-bold" data-niche="Dentists" data-loc="London">🦷 Dentists (London)</button>
-      </div>
-
-      <!-- Simple 2-Field Form (Niche + Location) -->
-      <form id="hunt-form-v2" autocomplete="off" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-          
-          <div class="md:col-span-6">
-            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">1. Target Niche / Industry</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">🎯</span>
-              <input type="text" id="input-niche" required autocomplete="off" value="" placeholder="e.g. Digital Marketing, Plumbers, Hospitals, Gyms, Salons, Dentists" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
-            </div>
-          </div>
-
-          <div class="md:col-span-6">
-            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">2. Target Location / City</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">📍</span>
-              <input type="text" id="input-location" required autocomplete="off" value="" placeholder="e.g. Jaipur, Miami, Kanpur, Dubai, Delhi, Mumbai, London, New York" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
-            </div>
-          </div>
-
-        </div>
-
-        <div class="flex justify-end pt-2">
-          <button type="submit" id="btn-hunt" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/25 transition duration-200 flex items-center justify-center space-x-2">
-            <span id="btn-hunt-label">🚀 Launch Autonomous Agent Hunter</span>
-            <span id="hunt-spinner" class="hidden animate-spin">🌀</span>
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Radar Telemetry Section -->
-    <section id="scanner-section" class="hidden spatial-card p-6 rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50/40 to-white space-y-4">
-      <div class="flex items-center justify-between border-b border-blue-100 pb-3">
-        <div class="flex items-center space-x-3.5">
-          <div class="relative h-10 w-10 rounded-full border-2 border-blue-400 overflow-hidden flex items-center justify-center shadow-inner">
-            <div class="absolute inset-0 radar-sweep"></div>
-            <div class="h-2.5 w-2.5 bg-blue-600 rounded-full z-10"></div>
-          </div>
-          <div>
-            <h3 class="font-black text-blue-950 text-sm tracking-tight" id="scanner-status">Agent Scanning Web & Official Maps Nodes...</h3>
-            <p class="text-[11px] text-blue-600 font-semibold" id="scanner-timer">Autonomous Extraction Active</p>
-          </div>
-        </div>
-        <div class="text-right">
-          <span id="scanner-speed-badge" class="px-2.5 py-1 text-xs font-black bg-blue-600 text-white rounded-lg font-mono-code">Scanning...</span>
-        </div>
-      </div>
-      <div id="telemetry-log" class="font-mono-code text-xs text-slate-600 space-y-1 max-h-28 overflow-y-auto pr-1"></div>
-    </section>
-
-    <!-- Results Toolbar -->
-    <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div class="flex items-center space-x-3">
-        <h2 class="text-base font-black text-slate-900">Extracted Real Clients & Businesses</h2>
-        <span id="results-count-badge" class="px-3 py-1 text-xs font-black bg-blue-100 text-blue-800 rounded-full">0 Captured</span>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2 text-xs">
-        <span class="text-slate-400 font-bold">Filter:</span>
-        <button class="filter-pill px-3 py-1.5 rounded-xl border border-blue-300 bg-blue-50 text-blue-700 font-bold shadow-sm" data-filter="all">All Verified</button>
-        <button class="filter-pill px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50 shadow-sm" data-filter="has-phone">📞 Phone Available</button>
-        <button class="filter-pill px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50 shadow-sm" data-filter="has-web">🌐 Website Available</button>
-      </div>
-    </section>
-
-    <!-- Cards Grid -->
-    <section id="leads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    </section>
-
-    <!-- Load More Button Container -->
-    <div id="load-more-container" class="hidden text-center pt-4 pb-8">
-      <button id="btn-load-more" class="px-8 py-3.5 bg-white hover:bg-slate-50 text-blue-600 font-extrabold text-sm rounded-2xl border-2 border-blue-600/30 hover:border-blue-600 shadow-sm transition inline-flex items-center space-x-2">
-        <span id="load-more-text">📥 Load More Businesses (+15)</span>
-        <span id="load-more-spinner" class="hidden animate-spin">🌀</span>
-      </button>
-    </div>
-
-    <!-- Empty State -->
-    <div id="empty-state" class="spatial-card p-14 text-center rounded-3xl space-y-3">
-      <div class="text-5xl">⚡</div>
-      <h3 class="text-lg font-black text-slate-900">Data i5 Agent Ready</h3>
-      <p class="text-xs text-slate-500 max-w-md mx-auto">
-        Enter your target Niche and Location above, then click Launch Agent Hunter to extract genuine leads with phone numbers, websites and physical maps profiles.
-      </p>
-    </div>
-
-  </main>
-
-  <script src="/app.js?v=3.0"></script>
+  <script src="/app.js?v=4.0"></script>
 </body>
 </html>

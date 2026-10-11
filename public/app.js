@@ -2,6 +2,8 @@ let allLeads = [];
 let currentFilter = 'all';
 let currentPage = 1;
 let currentSearchParams = null;
+let currentViewMode = 'cards'; // 'cards' or 'table'
+let activeWhatsAppLead = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   // Check License Key
@@ -40,9 +42,35 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
       btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-300');
       currentFilter = btn.getAttribute('data-filter');
-      renderCards();
+      renderResults();
     });
   });
+
+  // View Switcher (Cards vs Table)
+  const btnCards = document.getElementById('view-mode-cards');
+  const btnTable = document.getElementById('view-mode-table');
+  if (btnCards && btnTable) {
+    btnCards.addEventListener('click', () => {
+      currentViewMode = 'cards';
+      btnCards.className = 'px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs font-bold';
+      btnTable.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-bold';
+      document.getElementById('leads-grid').classList.remove('hidden');
+      document.getElementById('leads-table-container').classList.add('hidden');
+      renderResults();
+    });
+
+    btnTable.addEventListener('click', () => {
+      currentViewMode = 'table';
+      btnTable.className = 'px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs font-bold';
+      btnCards.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-bold';
+      document.getElementById('leads-grid').classList.add('hidden');
+      document.getElementById('leads-table-container').classList.remove('hidden');
+      renderResults();
+    });
+  }
+
+  // Modals Listeners
+  setupModals();
 });
 
 // License Unlock Handler
@@ -126,7 +154,7 @@ if (huntForm) {
     scannerSection.classList.remove('hidden');
     if (emptyState) emptyState.classList.add('hidden');
     logBox.innerHTML = '';
-    speedBadge.textContent = 'Searching...';
+    speedBadge.textContent = 'Scanning...';
     if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
 
     statusText.textContent = `Hunting real [${niche}] in [${location}]...`;
@@ -146,7 +174,7 @@ if (huntForm) {
         speedBadge.textContent = `⚡ ${data.duration}`;
         statusText.textContent = `Agent found ${allLeads.length} real businesses in ${location}!`;
         logLine(`Successfully extracted ${allLeads.length} genuine leads with contacts.`, '✅');
-        renderCards();
+        renderResults();
 
         if (loadMoreContainer) {
           if (data.hasMore) {
@@ -162,7 +190,7 @@ if (huntForm) {
       logLine('Network error during hunt execution.', '❌');
     } finally {
       btnHunt.disabled = false;
-      btnLabel.textContent = '🚀 Launch Autonomous Agent Hunter';
+      btnLabel.textContent = '🚀 Launch Autonomous Agent';
       spinner.classList.add('hidden');
     }
   });
@@ -193,7 +221,7 @@ if (btnLoadMore) {
 
       if (data.success && data.leads && data.leads.length > 0) {
         allLeads = [...allLeads, ...data.leads];
-        renderCards();
+        renderResults();
 
         if (!data.hasMore) {
           loadMoreContainer.classList.add('hidden');
@@ -211,12 +239,11 @@ if (btnLoadMore) {
   });
 }
 
-// Render Data i5 Cards (Only Show Fields If Available)
-function renderCards() {
-  const container = document.getElementById('leads-grid');
+// Unified Rendering Function (Renders Cards or Table)
+function renderResults() {
   const countBadge = document.getElementById('results-count-badge');
-  if (!container) return;
-
+  const navBadge = document.getElementById('nav-count-badge');
+  
   let filtered = allLeads;
   if (currentFilter === 'has-phone') {
     filtered = allLeads.filter(l => l.phone);
@@ -224,12 +251,22 @@ function renderCards() {
     filtered = allLeads.filter(l => l.website);
   }
 
-  countBadge.textContent = `${filtered.length} Leads Captured`;
+  if (countBadge) countBadge.textContent = `${filtered.length} Leads Captured`;
+  if (navBadge) navBadge.textContent = `${filtered.length}`;
+
+  renderCardsView(filtered);
+  renderTableView(filtered);
+}
+
+// 1. Render Cards View (Matching Image 3 Style)
+function renderCardsView(filtered) {
+  const container = document.getElementById('leads-grid');
+  if (!container) return;
   container.innerHTML = '';
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="col-span-full text-center py-12 text-slate-400 text-xs font-semibold">
+      <div class="col-span-full text-center py-12 text-slate-400 text-xs font-semibold saas-card rounded-2xl">
         No businesses match this filter. Select "All Verified" to view all records.
       </div>
     `;
@@ -238,105 +275,95 @@ function renderCards() {
 
   filtered.forEach((lead, index) => {
     const card = document.createElement('div');
-    card.className = 'spatial-card p-6 rounded-3xl flex flex-col justify-between space-y-4 card-appear';
-    card.style.animationDelay = `${(index % 15) * 40}ms`;
+    card.className = 'saas-card p-5 rounded-2xl flex flex-col justify-between space-y-3.5 card-appear';
+    card.style.animationDelay = `${(index % 15) * 35}ms`;
 
+    const initials = lead.name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'B2B';
     const cleanDigits = (lead.phone || '').replace(/[^0-9]/g, '');
-    const whatsAppUrl = cleanDigits.length >= 7 ? `https://wa.me/${cleanDigits}?text=${encodeURIComponent(`Hello ${lead.name}, I found your business profile and wanted to connect.`)}` : null;
-
-    // Dynamically build info rows (ONLY for fields that actually exist)
-    let infoRows = '';
-
-    if (lead.phone) {
-      infoRows += `
-        <div class="flex items-center justify-between py-1.5 bg-slate-50 px-3 rounded-xl border border-slate-100">
-          <span class="text-slate-500 font-bold">📞 Phone:</span>
-          <a href="tel:${lead.phone}" class="font-black text-slate-900 hover:text-blue-600 transition">${lead.phone}</a>
-        </div>
-      `;
-    }
-
-    if (lead.website) {
-      infoRows += `
-        <div class="flex items-center justify-between py-1.5 bg-slate-50 px-3 rounded-xl border border-slate-100">
-          <span class="text-slate-500 font-bold">🌐 Website:</span>
-          <a href="${lead.website}" target="_blank" class="font-bold text-blue-600 hover:underline truncate max-w-[190px]">${lead.website.replace('https://', '').replace('http://', '')}</a>
-        </div>
-      `;
-    }
-
-    if (lead.email) {
-      infoRows += `
-        <div class="flex items-center justify-between py-1.5 bg-slate-50 px-3 rounded-xl border border-slate-100">
-          <span class="text-slate-500 font-bold">✉️ Email:</span>
-          <span class="font-mono-code text-[11px] font-bold text-slate-800 truncate max-w-[190px]">${lead.email}</span>
-        </div>
-      `;
-    }
 
     card.innerHTML = `
       <div>
-        <div class="flex items-start justify-between gap-2 mb-2">
-          <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 rounded-lg border border-blue-200">
+        <!-- Card Header: Avatar & Category -->
+        <div class="flex items-start justify-between gap-2 mb-2.5">
+          <div class="flex items-center space-x-2.5 min-w-0">
+            <div class="h-9 w-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-black text-xs shrink-0 border border-blue-100">
+              ${initials}
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-black text-slate-900 text-sm leading-snug tracking-tight truncate">${lead.name}</h3>
+              <p class="text-[10px] text-emerald-700 font-bold flex items-center space-x-1">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                <span>Verified Business</span>
+              </p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 rounded-md border border-slate-200 shrink-0">
             ${lead.niche}
-          </span>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-            ✓ ${lead.location}
           </span>
         </div>
 
-        <h3 class="font-black text-slate-900 text-base leading-snug tracking-tight">
-          ${lead.name}
-        </h3>
-
-        <p class="text-xs text-slate-500 mt-2 flex items-start leading-relaxed">
-          <span class="mr-1.5 text-blue-600 mt-0.5">📍</span>
-          <span><strong>Address:</strong> ${lead.fullAddress}</span>
+        <!-- Address & Google Maps Link -->
+        <p class="text-[11px] text-slate-500 flex items-start leading-relaxed mb-2.5">
+          <span class="mr-1 text-blue-600">📍</span>
+          <span class="line-clamp-2">${lead.fullAddress}</span>
         </p>
 
-        <!-- Google Maps Link -->
-        <div class="mt-2.5">
-          <a href="${lead.googleMapsUrl}" target="_blank" class="inline-flex items-center space-x-1.5 text-[11px] font-black text-blue-600 hover:text-blue-800 bg-blue-50/90 px-3 py-1.5 rounded-xl border border-blue-200 transition">
-            <span>🗺️ Open Full Google Maps Profile</span>
+        <!-- Google Maps Profile Link -->
+        <div>
+          <a href="${lead.googleMapsUrl}" target="_blank" class="inline-flex items-center space-x-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200 transition">
+            <span>🗺️ Google Maps Profile</span>
             <span>↗</span>
           </a>
         </div>
       </div>
 
-      <!-- Info Matrix (Only rendered if attributes actually exist) -->
-      ${infoRows ? `
-        <div class="space-y-2 pt-2 border-t border-slate-100 text-xs">
-          ${infoRows}
-        </div>
-      ` : `
-        <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
-          Registered Physical Business in ${lead.location}
-        </div>
-      `}
+      <!-- Info Matrix -->
+      <div class="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
+        ${lead.phone ? `
+          <div class="flex items-center justify-between py-1 px-2.5 bg-slate-50 rounded-lg border border-slate-100">
+            <span class="text-slate-400 font-bold text-[10px]">📞 Phone:</span>
+            <a href="tel:${lead.phone}" class="font-extrabold text-slate-900 hover:text-blue-600 transition text-[11px] font-mono-code">${lead.phone}</a>
+          </div>
+        ` : ''}
 
-      <!-- Action Buttons -->
+        ${lead.website ? `
+          <div class="flex items-center justify-between py-1 px-2.5 bg-slate-50 rounded-lg border border-slate-100">
+            <span class="text-slate-400 font-bold text-[10px]">🌐 Website:</span>
+            <a href="${lead.website}" target="_blank" class="font-bold text-blue-600 hover:underline truncate max-w-[170px] text-[11px]">${lead.website.replace('https://', '').replace('http://', '')}</a>
+          </div>
+        ` : ''}
+
+        ${lead.email ? `
+          <div class="flex items-center justify-between py-1 px-2.5 bg-slate-50 rounded-lg border border-slate-100">
+            <span class="text-slate-400 font-bold text-[10px]">✉️ Email:</span>
+            <span class="font-mono-code text-[10px] font-bold text-slate-800 truncate max-w-[170px]">${lead.email}</span>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Action Buttons Row (WhatsApp, Call, Website) -->
       <div class="pt-2 grid grid-cols-2 gap-2">
-        ${lead.phone && whatsAppUrl ? `
-          <a href="${whatsAppUrl}" target="_blank" class="py-2.5 text-[11px] font-black bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl transition text-center shadow-sm flex items-center justify-center space-x-1">
-            <span>💬 WhatsApp</span>
-          </a>
+        ${cleanDigits.length >= 7 ? `
+          <button onclick="openWhatsAppModal(${lead.id})" class="py-2 px-3 text-[11px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition text-center shadow-xs flex items-center justify-center space-x-1">
+            <span>💬 WhatsApp Chat</span>
+          </button>
         ` : (lead.website ? `
-          <a href="${lead.website}" target="_blank" class="py-2.5 text-[11px] font-black bg-slate-900 hover:bg-black text-white rounded-xl transition text-center shadow-sm flex items-center justify-center space-x-1">
+          <a href="${lead.website}" target="_blank" class="py-2 px-3 text-[11px] font-bold bg-slate-800 hover:bg-black text-white rounded-xl transition text-center shadow-xs flex items-center justify-center space-x-1">
             <span>🌐 Website</span>
           </a>
         ` : `
-          <a href="${lead.googleSearchUrl}" target="_blank" class="py-2.5 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition text-center flex items-center justify-center space-x-1">
-            <span>🔍 Google Details</span>
+          <a href="${lead.googleSearchUrl}" target="_blank" class="py-2 px-3 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl transition text-center">
+            <span>🔍 Details</span>
           </a>
         `)}
 
         ${lead.phone ? `
-          <a href="tel:${lead.phone}" class="py-2.5 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition text-center shadow-sm flex items-center justify-center space-x-1">
+          <a href="tel:${lead.phone}" class="py-2 px-3 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition text-center shadow-xs flex items-center justify-center space-x-1">
             <span>📞 Call Direct</span>
           </a>
         ` : `
-          <a href="${lead.googleMapsUrl}" target="_blank" class="py-2.5 text-[11px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition text-center shadow-sm flex items-center justify-center space-x-1">
-            <span>🗺️ View on Maps</span>
+          <a href="${lead.googleMapsUrl}" target="_blank" class="py-2 px-3 text-[11px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl transition text-center border border-blue-200">
+            <span>🗺️ Maps View</span>
           </a>
         `}
       </div>
@@ -345,6 +372,154 @@ function renderCards() {
     container.appendChild(card);
   });
 }
+
+// 2. Render Table Spreadsheet View (Matching Image 1 Style)
+function renderTableView(filtered) {
+  const tbody = document.getElementById('leads-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">No leads available for this view.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(lead => {
+    const cleanDigits = (lead.phone || '').replace(/[^0-9]/g, '');
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+    tr.innerHTML = `
+      <td class="py-3 px-4 font-mono-code text-slate-400 font-bold">${lead.id}</td>
+      <td class="py-3 px-4 font-bold text-slate-900">${lead.name}</td>
+      <td class="py-3 px-4">
+        ${lead.phone ? `
+          <div class="flex items-center space-x-2">
+            <a href="tel:${lead.phone}" class="font-mono-code font-bold text-slate-800 hover:text-blue-600">${lead.phone}</a>
+            ${cleanDigits.length >= 7 ? `
+              <button onclick="openWhatsAppModal(${lead.id})" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 text-[10px] font-bold rounded-md">💬 WA</button>
+            ` : ''}
+          </div>
+        ` : '<span class="text-slate-400">N/A</span>'}
+      </td>
+      <td class="py-3 px-4 font-mono-code text-[11px]">
+        ${lead.email ? `<span class="text-slate-800 font-semibold">${lead.email}</span>` : '<span class="text-slate-400">N/A</span>'}
+      </td>
+      <td class="py-3 px-4">
+        ${lead.website ? `
+          <a href="${lead.website}" target="_blank" class="text-blue-600 hover:underline font-bold truncate max-w-[140px] block">${lead.website.replace('https://', '').replace('http://', '')}</a>
+        ` : '<span class="text-slate-400">N/A</span>'}
+      </td>
+      <td class="py-3 px-4 text-slate-500 truncate max-w-[180px]">${lead.fullAddress}</td>
+      <td class="py-3 px-4 text-right">
+        <a href="${lead.googleMapsUrl}" target="_blank" class="px-2.5 py-1 text-[11px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg border border-blue-200 inline-block">Maps ↗</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// 3. Modals Management (Image 1 CSV Modal & Image 3 WhatsApp Modal)
+function setupModals() {
+  // CSV Preview Modal Listeners
+  const csvModal = document.getElementById('csv-preview-modal');
+  const btnOpenCsv = document.getElementById('btn-download-csv');
+  const btnNavCsv = document.getElementById('nav-open-csv-modal');
+  const btnCloseCsv = document.getElementById('btn-close-csv-modal');
+  const btnCancelCsv = document.getElementById('btn-cancel-csv');
+  const btnConfirmCsv = document.getElementById('btn-confirm-download-csv');
+
+  function openCsvModal() {
+    if (allLeads.length === 0) {
+      alert('Please run a search first to capture leads before exporting.');
+      return;
+    }
+    const tbody = document.getElementById('csv-preview-table-body');
+    const subtitle = document.getElementById('csv-modal-subtitle');
+    const countLabel = document.getElementById('csv-modal-count');
+
+    if (subtitle) subtitle.textContent = `Exporting ${allLeads.length} leads from 'Data i5' intelligence engine`;
+    if (countLabel) countLabel.textContent = `Total Leads: ${allLeads.length} | File Format: CSV`;
+
+    if (tbody) {
+      tbody.innerHTML = '';
+      allLeads.slice(0, 10).forEach(l => {
+        const cleanDigits = (l.phone || '').replace(/[^0-9]/g, '');
+        const waLink = cleanDigits.length >= 7 ? `wa.me/${cleanDigits}` : 'N/A';
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100';
+        tr.innerHTML = `
+          <td class="py-2 px-3 font-sans font-bold text-slate-900">${l.name}</td>
+          <td class="py-2 px-3">${l.phone || 'N/A'}</td>
+          <td class="py-2 px-3 text-emerald-600 font-bold">${waLink}</td>
+          <td class="py-2 px-3 text-slate-700">${l.email || 'N/A'}</td>
+          <td class="py-2 px-3 text-blue-600 truncate max-w-[130px]">${l.website || 'N/A'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    if (csvModal) csvModal.classList.remove('hidden');
+  }
+
+  function closeCsvModal() {
+    if (csvModal) csvModal.classList.add('hidden');
+  }
+
+  if (btnOpenCsv) btnOpenCsv.addEventListener('click', openCsvModal);
+  if (btnNavCsv) btnNavCsv.addEventListener('click', (e) => { e.preventDefault(); openCsvModal(); });
+  if (btnCloseCsv) btnCloseCsv.addEventListener('click', closeCsvModal);
+  if (btnCancelCsv) btnCancelCsv.addEventListener('click', closeCsvModal);
+  if (btnConfirmCsv) {
+    btnConfirmCsv.addEventListener('click', () => {
+      window.location.href = '/api/export-csv';
+      closeCsvModal();
+    });
+  }
+
+  // WhatsApp Modal Listeners
+  const waModal = document.getElementById('whatsapp-pitch-modal');
+  const btnCloseWa = document.getElementById('btn-close-whatsapp-modal');
+  const btnCancelWa = document.getElementById('btn-cancel-whatsapp');
+  const btnLaunchWa = document.getElementById('btn-launch-whatsapp');
+
+  function closeWaModal() {
+    if (waModal) waModal.classList.add('hidden');
+  }
+
+  if (btnCloseWa) btnCloseWa.addEventListener('click', closeWaModal);
+  if (btnCancelWa) btnCancelWa.addEventListener('click', closeWaModal);
+  if (btnLaunchWa) {
+    btnLaunchWa.addEventListener('click', () => {
+      if (!activeWhatsAppLead) return;
+      const text = document.getElementById('wa-pitch-text').value;
+      const cleanDigits = (activeWhatsAppLead.phone || '').replace(/[^0-9]/g, '');
+      const url = `https://wa.me/${cleanDigits}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+      closeWaModal();
+    });
+  }
+}
+
+// Global helper to open WhatsApp Modal (Image 3 Style)
+window.openWhatsAppModal = function(id) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  activeWhatsAppLead = lead;
+
+  const modal = document.getElementById('whatsapp-pitch-modal');
+  const nameEl = document.getElementById('wa-modal-lead-name');
+  const phoneEl = document.getElementById('wa-modal-phone');
+  const textarea = document.getElementById('wa-pitch-text');
+
+  if (nameEl) nameEl.textContent = lead.name;
+  if (phoneEl) phoneEl.textContent = lead.phone || 'WhatsApp Verified';
+  if (textarea) {
+    textarea.value = `Hi ${lead.name}! 👋\n\nI found your business profile while researching top ${lead.niche} providers in ${lead.location}.\n\nWould you be open to a quick 5-minute conversation this week on how we can help you scale your client pipeline?\n\nBest,\nVoltara Agency Team`;
+  }
+
+  if (modal) modal.classList.remove('hidden');
+};
 
 // Copy All Emails
 const btnCopyEmails = document.getElementById('btn-copy-all-emails');
@@ -360,17 +535,5 @@ if (btnCopyEmails) {
       btnCopyEmails.innerHTML = '<span>✅ Copied All Emails!</span>';
       setTimeout(() => btnCopyEmails.innerHTML = orig, 2000);
     });
-  });
-}
-
-// Export CSV
-const btnCsv = document.getElementById('btn-download-csv');
-if (btnCsv) {
-  btnCsv.addEventListener('click', () => {
-    if (allLeads.length === 0) {
-      alert('Please run a search first before exporting.');
-      return;
-    }
-    window.location.href = '/api/export-csv';
   });
 }
