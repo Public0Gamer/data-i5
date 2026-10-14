@@ -5,8 +5,14 @@ let currentSearchParams = null;
 let currentViewMode = 'cards'; // 'cards' or 'table'
 let activeWhatsAppLead = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Check License Key
+  // Auto-detect License Key from URL query param (Seamless Whop/AppSumo instant redirect)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlKey = urlParams.get('key') || urlParams.get('license');
+  if (urlKey) {
+    localStorage.setItem('data_i5_license', urlKey.trim().toUpperCase());
+  }
+
+  // Check License Key in LocalStorage
   const savedKey = localStorage.getItem('data_i5_license');
   const overlay = document.getElementById('license-overlay');
   if (savedKey && overlay) {
